@@ -10,15 +10,22 @@ export async function GET(req: Request) {
 
   const { searchParams } = new URL(req.url);
   const code = searchParams.get("code");
-  const state = searchParams.get("state"); // workspaceId encoded in state
+  const state = searchParams.get("state"); // base64-encoded JSON with workspaceId
 
   if (!code) {
     return NextResponse.json({ error: "Missing authorization code" }, { status: 400 });
   }
 
-  // In production, decode workspaceId from state parameter
-  // For now, get it from query or use default
-  const workspaceId = state || "";
+  // Decode workspace context from the state parameter
+  let workspaceId = "";
+  if (state) {
+    try {
+      const decoded = JSON.parse(Buffer.from(state, "base64").toString("utf-8"));
+      workspaceId = decoded.workspaceId || "";
+    } catch {
+      // If state decoding fails, fall through
+    }
+  }
 
   if (!workspaceId) {
     return NextResponse.json({ error: "Missing workspace context" }, { status: 400 });

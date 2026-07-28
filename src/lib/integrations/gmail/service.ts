@@ -10,9 +10,11 @@ import { eq, and } from "drizzle-orm";
 /**
  * Start Gmail OAuth flow. Returns the Google authorization URL.
  */
-export async function connectGmail(): Promise<string> {
-  await auth();
-  return getAuthUrl();
+export async function connectGmail(workspaceId: string): Promise<string> {
+  await auth(); // Verify user is authenticated
+  // Encode workspace ID in the OAuth state parameter so we can retrieve it in the callback
+  const state = Buffer.from(JSON.stringify({ workspaceId })).toString("base64");
+  return getAuthUrl(state);
 }
 
 /**

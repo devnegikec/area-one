@@ -16,7 +16,7 @@ export async function GET(req: Request) {
   }
 
   try {
-    const authUrl = await connectGmail();
+    const authUrl = await connectGmail(workspaceId);
     return NextResponse.redirect(authUrl);
   } catch {
     return NextResponse.json({ error: "Failed to initiate Gmail connection" }, { status: 500 });

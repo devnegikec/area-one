@@ -5,8 +5,9 @@ const REDIRECT_URI = `${env.NEXT_PUBLIC_APP_URL}/api/integrations/gmail/callback
 
 /**
  * Generate the Google OAuth URL for Gmail connection.
+ * @param state - Data to pass through the OAuth flow (e.g., workspace ID encoded as JSON)
  */
-export function getAuthUrl(): string {
+export function getAuthUrl(state?: string): string {
   const oauth2Client = new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET,
@@ -16,6 +17,7 @@ export function getAuthUrl(): string {
   return oauth2Client.generateAuthUrl({
     access_type: "offline",
     prompt: "consent",
+    state: state || undefined,
     scope: [
       "https://www.googleapis.com/auth/gmail.readonly",
       "https://www.googleapis.com/auth/gmail.send",
