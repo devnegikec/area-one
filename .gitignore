@@ -51,3 +51,6 @@ next-env.d.ts
 
 # drizzle
 /src/db/migrations/meta/
+
+# clerk configuration (can include secrets)
+/.clerk/
