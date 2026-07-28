@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { WorkspaceSwitcher } from "@/components/workspace-switcher";
 import { cn } from "@/lib/utils";
 
 // ─── Navigation Items ───────────────────────────────────────────
@@ -148,6 +149,13 @@ function SidebarContent({
           {(!collapsed || isMobile) && <span className="text-lg">Area-One</span>}
         </Link>
       </div>
+
+      {/* Workspace Switcher (desktop, expanded) */}
+      {!collapsed && !isMobile && (
+        <div className="px-3 py-2">
+          <WorkspaceSwitcher workspaces={[]} />
+        </div>
+      )}
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto p-3">
