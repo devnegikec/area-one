@@ -10,6 +10,29 @@ import { Badge } from "@/components/ui/badge";
 export default function SettingsPage() {
   const [connectingGmail, setConnectingGmail] = React.useState(false);
   const [connectingSlack, setConnectingSlack] = React.useState(false);
+  const [integrations, setIntegrations] = React.useState<{ gmail: boolean; slack: boolean }>({
+    gmail: false,
+    slack: false,
+  });
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    async function fetchStatus() {
+      try {
+        const res = await fetch("/api/integrations/status");
+        if (res.ok) {
+          const data = await res.json();
+          setIntegrations(data);
+        }
+      } catch {
+        // silently fail
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchStatus();
+  }, []);
 
   const handleConnectGmail = () => {
     setConnectingGmail(true);
@@ -48,7 +71,9 @@ export default function SettingsPage() {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                {false ? (
+                {loading ? (
+                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                ) : integrations.gmail ? (
                   <Badge variant="success" className="gap-1">
                     <Check className="h-3 w-3" /> Connected
                   </Badge>
@@ -78,7 +103,9 @@ export default function SettingsPage() {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                {false ? (
+                {loading ? (
+                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                ) : integrations.slack ? (
                   <Badge variant="success" className="gap-1">
                     <Check className="h-3 w-3" /> Connected
                   </Badge>
