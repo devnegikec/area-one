@@ -2,10 +2,27 @@ import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { handleSlackCallback } from "@/lib/integrations/slack/service";
 
+/**
+ * Build the correct base URL using forwarded headers (for tunnels/proxies).
+ * Falls back to NEXT_PUBLIC_APP_URL, then req.url.
+ */
+function getBaseUrl(req: Request): string {
+  const forwardedHost = req.headers.get("x-forwarded-host");
+  const forwardedProto = req.headers.get("x-forwarded-proto") ?? "https";
+  if (forwardedHost) {
+    return `${forwardedProto}://${forwardedHost}`;
+  }
+  // Fallback: use env var for tunnel scenarios where headers aren't forwarded
+  if (process.env.NEXT_PUBLIC_APP_URL) {
+    return process.env.NEXT_PUBLIC_APP_URL;
+  }
+  return new URL(req.url).origin;
+}
+
 export async function GET(req: Request) {
   const { userId } = await auth();
   if (!userId) {
-    return NextResponse.redirect(new URL("/sign-in", req.url));
+    return NextResponse.redirect(new URL("/sign-in", getBaseUrl(req)));
   }
 
   const { searchParams } = new URL(req.url);
@@ -32,13 +49,15 @@ export async function GET(req: Request) {
 
   try {
     const result = await handleSlackCallback(workspaceId, code);
-    const redirectUrl = new URL("/dashboard", req.url);
+    const baseUrl = getBaseUrl(req);
+    const redirectUrl = new URL("/dashboard", baseUrl);
     redirectUrl.searchParams.set("slack_connected", "true");
     redirectUrl.searchParams.set("messages_synced", String(result.messagesSynced));
     return NextResponse.redirect(redirectUrl);
   } catch (error) {
     console.error("Slack callback error:", error);
-    const redirectUrl = new URL("/dashboard/settings", req.url);
+    const baseUrl = getBaseUrl(req);
+    const redirectUrl = new URL("/dashboard/settings", baseUrl);
     redirectUrl.searchParams.set("error", "slack_connection_failed");
     return NextResponse.redirect(redirectUrl);
   }
