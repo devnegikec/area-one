@@ -80,7 +80,7 @@ export async function handleGmailCallback(
     }, 50); // Start with 50 for initial sync
 
     for (const email of recentEmails) {
-      await db
+      const [saved] = await db
         .insert(emails)
         .values({
           workspaceId,
@@ -99,8 +99,16 @@ export async function handleGmailCallback(
           sentAt: email.sentAt,
           receivedAt: new Date(),
         } as never)
-        .onConflictDoNothing({ target: emails.gmailId });
+        .onConflictDoNothing({ target: emails.gmailId })
+        .returning({ id: emails.id });
       emailsSynced++;
+
+      // Trigger entity extraction for this email (fire-and-forget)
+      if (saved) {
+        triggerEntityExtraction(saved.id).catch((err) =>
+          console.error(`Entity extraction failed for email ${saved.id}:`, err)
+        );
+      }
     }
   } catch (error) {
     console.error("Initial email sync error:", error);
@@ -108,4 +116,17 @@ export async function handleGmailCallback(
   }
 
   return { success: true, emailsSynced };
+}
+
+/**
+ * Fire-and-forget call to the entity extraction pipeline.
+ * Extracts company, contacts, and topics from the email.
+ */
+async function triggerEntityExtraction(emailId: string): Promise<void> {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  await fetch(`${baseUrl}/api/ai/extract-entities`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ emailId }),
+  });
 }
