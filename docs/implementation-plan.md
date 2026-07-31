@@ -1247,10 +1247,38 @@ LAUNCH CHECKLIST:
 
 ---
 
-## Phase 5: Multi-Agent & Autonomy
+## Phase 5: Multi-Agent & Autonomy ✅ DONE
 
 **Duration:** Sprints 17–20 (Weeks 33–40)
 **Goal:** Specialist agents work together. Configurable autonomous execution.
+
+### Sprint 17–20: Multi-Agent System + Configurable Autonomy ✅ DONE
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ BUILD: Configurable Autonomy ✅                                  │
+├─────────────────────────────────────────────────────────────────┤
+│ ✅ Rules engine: src/lib/agents/autonomy-rules.ts                │
+│    • 4 guardrail levels: Fully Auto → Never Auto                │
+│    • 10 configurable action types                               │
+│    • Per-workspace settings stored in workspace settings JSON   │
+│ ✅ Autonomy API: GET/PUT /api/settings/autonomy                  │
+│    • Fetch current rules, update individual rules               │
+│ ✅ Settings UI: AutonomySettings component                       │
+│    • Dropdown per action: 🤖 Auto → 📝 Draft → 💡 Suggest → 🔒 Never│
+│    • Live save on change                                        │
+│                                                                  │
+│ Guardrail Levels:                                                │
+│   Level 0: 🤖 Fully autonomous (entity extraction, memory)       │
+│   Level 1: 📝 Auto-draft, user approves (follow-ups)            │
+│   Level 2: 💡 Suggest, user initiates (meetings, email send)    │
+│   Level 3: 🔒 Never autonomous (pricing, proposals)             │
+│                                                                  │
+│ Key Files:                                                       │
+│ • src/lib/agents/autonomy-rules.ts ← Rules engine                │
+│ • src/app/api/settings/autonomy/route.ts                         │
+│ • src/app/(dashboard)/settings/page.tsx (Autonomy card)          │
+└─────────────────────────────────────────────────────────────────┘
 
 ### Sprint 17–18: Multi-Agent System
 

@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
+import { db } from "@/db";
+import { workspaceMembers } from "@/db/schema/workspaces";
 import { generateProposal } from "@/lib/drafting/proposal-generator";
+import { eq } from "drizzle-orm";
 
 export async function POST(req: Request) {
   const { userId } = await auth();
@@ -10,8 +13,15 @@ export async function POST(req: Request) {
   const customerId = body.customerId as string;
   if (!customerId) return NextResponse.json({ error: "Missing customerId" }, { status: 400 });
 
+  // Auto-resolve workspace
+  const [membership] = await db
+    .select({ workspaceId: workspaceMembers.workspaceId })
+    .from(workspaceMembers)
+    .where(eq(workspaceMembers.userId, userId))
+    .limit(1);
+
   try {
-    const proposal = await generateProposal(customerId, "");
+    const proposal = await generateProposal(customerId, membership?.workspaceId ?? "");
     return NextResponse.json(proposal);
   } catch (error) {
     console.error("Proposal generation failed:", error);

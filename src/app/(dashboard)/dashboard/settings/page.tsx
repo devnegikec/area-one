@@ -160,7 +160,97 @@ export default function SettingsPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Autonomy Settings */}
+        <AutonomySettings />
+
       </div>
     </DashboardLayout>
+  );
+}
+
+const GUARDRAIL_LABELS: Record<number, string> = {
+  0: "🤖 Fully Auto",
+  1: "📝 Auto-Draft, Approve",
+  2: "💡 Suggest Only",
+  3: "🔒 Never Auto",
+};
+
+const AUTONOMY_ITEMS: Array<{ key: string; label: string; description: string }> = [
+  { key: "entityExtraction", label: "Entity Extraction", description: "Extract companies and contacts from emails" },
+  { key: "memoryExtraction", label: "Memory Extraction", description: "Extract facts (budget, timeline, objections)" },
+  { key: "timelineGeneration", label: "Timeline Events", description: "Generate timeline events from emails" },
+  { key: "recommendationGeneration", label: "Recommendations", description: "Generate next-best-action suggestions" },
+  { key: "draftGeneration", label: "Draft Generation", description: "Auto-generate email drafts" },
+  { key: "followUpSending", label: "Follow-up Emails", description: "Send follow-up emails" },
+  { key: "emailSending", label: "Email Sending", description: "Send any email" },
+  { key: "meetingScheduling", label: "Meeting Scheduling", description: "Schedule meetings automatically" },
+  { key: "proposalSending", label: "Proposal Sending", description: "Send proposals to customers" },
+  { key: "pricingChanges", label: "Pricing Changes", description: "Modify pricing in proposals/contracts" },
+];
+
+function AutonomySettings() {
+  const [rules, setRules] = React.useState<Record<string, number>>({});
+  const [loading, setLoading] = React.useState(true);
+  const [saving, setSaving] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    async function fetch() {
+      try {
+        const res = await fetch("/api/settings/autonomy");
+        if (res.ok) setRules(await res.json());
+      } catch {
+        // silently fail
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetch();
+  }, []);
+
+  const handleChange = async (key: string, level: number) => {
+    setRules((prev) => ({ ...prev, [key]: level }));
+    setSaving(key);
+    await fetch("/api/settings/autonomy", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ [key]: level }),
+    });
+    setSaving(null);
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-lg">Autonomy Settings</CardTitle>
+        <CardDescription>
+          Control how much AI can do automatically. Higher levels = more human oversight.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        {AUTONOMY_ITEMS.map((item) => (
+          <div key={item.key} className="flex items-center justify-between rounded-lg border p-3">
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium">{item.label}</p>
+              <p className="text-xs text-muted-foreground">{item.description}</p>
+            </div>
+            <div className="flex items-center gap-1 ml-3">
+              {saving === item.key && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
+              <select
+                value={rules[item.key] ?? 1}
+                onChange={(e) => handleChange(item.key, Number(e.target.value))}
+                className="text-xs rounded-md border bg-background px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary"
+              >
+                {[0, 1, 2, 3].map((level) => (
+                  <option key={level} value={level}>
+                    {GUARDRAIL_LABELS[level]}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
   );
 }
