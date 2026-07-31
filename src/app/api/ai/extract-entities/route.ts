@@ -71,6 +71,11 @@ export async function POST(req: Request) {
       .set({ customerId, processedAt: new Date() })
       .where(eq(emails.id, emailId));
 
+    // Step 5: Trigger memory extraction (fire-and-forget)
+    triggerMemoryExtraction(emailId).catch((err) =>
+      console.error(`Memory extraction failed for email ${emailId}:`, err)
+    );
+
     return NextResponse.json({
       customerId,
       company: entities.company.name || null,
@@ -84,4 +89,16 @@ export async function POST(req: Request) {
       { status: 500 }
     );
   }
+}
+
+/**
+ * Fire-and-forget memory extraction after entity extraction completes.
+ */
+async function triggerMemoryExtraction(emailId: string): Promise<void> {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  await fetch(`${baseUrl}/api/ai/extract-memory`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ emailId }),
+  });
 }
