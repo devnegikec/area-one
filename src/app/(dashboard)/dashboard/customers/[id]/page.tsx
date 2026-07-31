@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { Building2, Mail, User, ArrowLeft, Loader2, ExternalLink, Brain } from "lucide-react";
+import { Building2, Mail, User, ArrowLeft, Loader2, ExternalLink, Brain, Clock } from "lucide-react";
 import { DashboardLayout } from "@/components/dashboard-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -45,6 +45,13 @@ interface CustomerDetail {
     evidence: string | null;
     status: string;
     createdAt: string;
+  }>;
+  timeline: Array<{
+    id: string;
+    type: string;
+    title: string;
+    description: string | null;
+    occurredAt: string;
   }>;
 }
 
@@ -122,7 +129,19 @@ export default function CustomerDetailPage() {
     );
   }
 
-  const { customer, contacts, emails } = data;
+  const { customer, contacts, emails, timeline } = data;
+
+  const timelineIcons: Record<string, string> = {
+    email_received: "📥",
+    email_sent: "📤",
+    meeting_scheduled: "📅",
+    deal_progressed: "📈",
+    deal_stalled: "⚠️",
+    objection_raised: "🚩",
+    commitment_made: "🤝",
+    ai_action: "🤖",
+    note: "📝",
+  };
 
   return (
     <DashboardLayout>
@@ -244,6 +263,49 @@ export default function CustomerDetailPage() {
                             </div>
                           </div>
                         ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Timeline Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Clock className="h-5 w-5" />
+                Timeline ({timeline.length} events)
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {timeline.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  No timeline events yet. Events generate automatically as emails are processed.
+                </p>
+              ) : (
+                <div className="relative pl-6 border-l-2 border-muted space-y-4">
+                  {timeline.map((event) => (
+                    <div key={event.id} className="relative">
+                      <span className="absolute -left-[25px] text-sm">
+                        {timelineIcons[event.type] || "•"}
+                      </span>
+                      <div className="rounded-lg border bg-muted/20 p-3">
+                        <p className="text-sm font-medium">{event.title}</p>
+                        {event.description && (
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {event.description}
+                          </p>
+                        )}
+                        <p className="text-[10px] text-muted-foreground mt-1.5">
+                          {new Date(event.occurredAt).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </p>
                       </div>
                     </div>
                   ))}

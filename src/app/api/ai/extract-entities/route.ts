@@ -76,6 +76,11 @@ export async function POST(req: Request) {
       console.error(`Memory extraction failed for email ${emailId}:`, err)
     );
 
+    // Step 6: Trigger timeline event (fire-and-forget)
+    triggerTimelineEvent(emailId).catch((err) =>
+      console.error(`Timeline event failed for email ${emailId}:`, err)
+    );
+
     return NextResponse.json({
       customerId,
       company: entities.company.name || null,
@@ -97,6 +102,18 @@ export async function POST(req: Request) {
 async function triggerMemoryExtraction(emailId: string): Promise<void> {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
   await fetch(`${baseUrl}/api/ai/extract-memory`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ emailId }),
+  });
+}
+
+/**
+ * Fire-and-forget timeline event generation.
+ */
+async function triggerTimelineEvent(emailId: string): Promise<void> {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  await fetch(`${baseUrl}/api/ai/generate-timeline`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ emailId }),

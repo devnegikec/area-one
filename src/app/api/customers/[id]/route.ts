@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
-import { customers, contacts, emails, customerMemoryEntries } from "@/db/schema";
+import { customers, contacts, emails, customerMemoryEntries, timelineEvents } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 
 /**
@@ -58,5 +58,24 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     .orderBy(desc(customerMemoryEntries.confidence))
     .limit(50);
 
-  return NextResponse.json({ customer, contacts: customerContacts, emails: recentEmails, memory });
+  const timeline = await db
+    .select({
+      id: timelineEvents.id,
+      type: timelineEvents.type,
+      title: timelineEvents.title,
+      description: timelineEvents.description,
+      occurredAt: timelineEvents.occurredAt,
+    })
+    .from(timelineEvents)
+    .where(eq(timelineEvents.customerId, id))
+    .orderBy(desc(timelineEvents.occurredAt))
+    .limit(50);
+
+  return NextResponse.json({
+    customer,
+    contacts: customerContacts,
+    emails: recentEmails,
+    memory,
+    timeline,
+  });
 }

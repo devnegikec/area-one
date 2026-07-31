@@ -5,3 +5,4 @@ export { conversations, messages } from "./conversations";
 export { customers } from "./customers";
 export { contacts } from "./contacts";
 export { customerMemoryEntries } from "./customer-memory";
+export { timelineEvents } from "./timeline-events";

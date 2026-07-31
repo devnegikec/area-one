@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Sidebar } from "@/components/sidebar";
 import { Topbar } from "@/components/topbar";
+import { GlobalSearch } from "@/components/global-search";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -62,6 +63,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     <ThemeProvider defaultTheme="system" storageKey="areaone-theme">
       <TooltipProvider delayDuration={0}>
         <div className="flex h-screen overflow-hidden bg-background">
+          <GlobalSearch />
           {/* Sidebar */}
           <Sidebar
             open={sidebarOpen}
