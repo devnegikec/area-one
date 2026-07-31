@@ -6,7 +6,55 @@ import { emails } from "@/db/schema/emails";
 import { workspaceMembers } from "@/db/schema/workspaces";
 import { decryptToken } from "@/lib/security/token-vault";
 import { fetchRecentEmails } from "@/lib/integrations/gmail/client";
+import { processEmail } from "@/lib/pipeline/process-email";
 import { eq, and } from "drizzle-orm";
+
+// Patterns that indicate a non-revenue email (newsletters, spam, notifications, etc.)
+const IRRELEVANT_PATTERNS = [
+  /^unsubscribe\b/i,
+  /newsletter/i,
+  /weekly digest/i,
+  /monthly (recap|roundup|update)/i,
+  /no.?reply/i,
+  /noreply/i,
+  /notification/i,
+  /your (order|receipt|invoice|payment|subscription|booking)/i,
+  /password reset/i,
+  /verify your (email|account)/i,
+  /security alert/i,
+  /two.factor/i,
+  /2fa/i,
+  /^welcome (to|back)/i,
+  /your account has been/i,
+  /confirm your (email|subscription)/i,
+  /^(thank you for|thanks for) (your|signing|registering)/i,
+];
+
+function isLikelyIrrelevant(subject: string | null, fromAddress: string): boolean {
+  if (!subject && !fromAddress) return true;
+
+  // Check common notification senders
+  const notificationSenders = [
+    "notifications@",
+    "noreply@",
+    "no-reply@",
+    "bounces@",
+    "mailer-daemon@",
+    "postmaster@",
+  ];
+  if (notificationSenders.some((s) => fromAddress.toLowerCase().includes(s))) {
+    return true;
+  }
+
+  // Check subject patterns
+  if (subject) {
+    for (const pattern of IRRELEVANT_PATTERNS) {
+      if (pattern.test(subject)) return true;
+    }
+  }
+
+  return false;
+}
 
 /**
  * GET /api/integrations/gmail/sync
@@ -46,9 +94,57 @@ export async function GET() {
     const tokens = JSON.parse(decrypted);
 
     const recent = await fetchRecentEmails(tokens, 20);
+
+    interface PipeEntry {
+      subject: string;
+      status: "new" | "reprocessed" | "skipped" | "irrelevant" | "failed";
+      company?: string;
+      error?: string;
+    }
+    const pipelineEntries: PipeEntry[] = [];
+
+    // --- Step 1: Re-process emails that were stored but never processed ---
+    const unprocessed = await db
+      .select({ id: emails.id, subject: emails.subject })
+      .from(emails)
+      .where(
+        and(
+          eq(emails.workspaceId, membership.workspaceId),
+          eq(emails.customerId, null as unknown as string)
+        )
+      )
+      .limit(10);
+
+    for (const email of unprocessed) {
+      try {
+        const result = await processEmail(email.id);
+        pipelineEntries.push({
+          subject: email.subject?.slice(0, 50) || "(no subject)",
+          status: result.error ? "failed" : "reprocessed",
+          company: result.companyName || undefined,
+          error: result.error || undefined,
+        });
+      } catch (err) {
+        pipelineEntries.push({
+          subject: email.subject?.slice(0, 50) || "(no subject)",
+          status: "failed",
+          error: String(err).slice(0, 150),
+        });
+      }
+    }
+
+    // --- Step 2: Sync new emails from Gmail ---
     let newCount = 0;
 
     for (const email of recent) {
+      if (isLikelyIrrelevant(email.subject, email.fromAddress)) {
+        pipelineEntries.push({
+          subject: email.subject?.slice(0, 50) || "(no subject)",
+          status: "irrelevant",
+        });
+        continue;
+      }
+
       const [exists] = await db
         .select({ id: emails.id })
         .from(emails)
@@ -56,7 +152,6 @@ export async function GET() {
         .limit(1);
 
       if (!exists) {
-        // fetchRecentEmails already returns full ParsedEmail — no need to re-fetch
         const [saved] = await db
           .insert(emails)
           .values({
@@ -78,27 +173,34 @@ export async function GET() {
           .onConflictDoNothing({ target: emails.gmailId })
           .returning({ id: emails.id });
 
-        newCount++;
-
-        // Trigger AI pipeline for new emails
         if (saved) {
-          triggerPipeline(saved.id);
+          newCount++;
+          try {
+            const result = await processEmail(saved.id);
+            pipelineEntries.push({
+              subject: email.subject?.slice(0, 50) || "(no subject)",
+              status: result.error ? "failed" : "new",
+              company: result.companyName || undefined,
+              error: result.error || undefined,
+            });
+          } catch (err) {
+            pipelineEntries.push({
+              subject: email.subject?.slice(0, 50) || "(no subject)",
+              status: "failed",
+              error: String(err).slice(0, 150),
+            });
+          }
         }
       }
     }
 
-    return NextResponse.json({ synced: newCount, total: recent.length });
+    return NextResponse.json({
+      synced: newCount,
+      total: recent.length,
+      pipeline: pipelineEntries,
+    });
   } catch (error) {
     console.error("Gmail sync error:", error);
-    return NextResponse.json({ error: "Sync failed" }, { status: 500 });
+    return NextResponse.json({ error: "Sync failed", details: String(error) }, { status: 500 });
   }
-}
-
-function triggerPipeline(emailId: string) {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-  fetch(`${baseUrl}/api/ai/extract-entities`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ emailId }),
-  }).catch(() => {});
 }

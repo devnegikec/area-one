@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
 import { db } from "@/db";
 import { emails, timelineEvents } from "@/db/schema";
 import { generateTimelineEvent } from "@/lib/timeline/event-generator";
 import { eq } from "drizzle-orm";
 
+const INTERNAL_SECRET = process.env.INTERNAL_API_SECRET || "area-one-internal";
+
 export async function POST(req: Request) {
-  const { userId } = await auth();
-  if (!userId) {
+  const secret = req.headers.get("x-internal-secret");
+  if (secret !== INTERNAL_SECRET) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

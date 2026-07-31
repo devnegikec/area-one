@@ -1,21 +1,18 @@
 import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
 import { db } from "@/db";
 import { emails, customerMemoryEntries } from "@/db/schema";
 import { extractFacts } from "@/lib/customer-memory/extract-facts";
 import { eq } from "drizzle-orm";
 
+const INTERNAL_SECRET = process.env.INTERNAL_API_SECRET || "area-one-internal";
+
 /**
  * POST /api/ai/extract-memory
- *
- * Trigger fact extraction for an email that's already linked to a customer.
- * Called after entity extraction completes.
- *
- * Body: { emailId: string }
+ * Called internally after entity extraction. Uses x-internal-secret for auth.
  */
 export async function POST(req: Request) {
-  const { userId } = await auth();
-  if (!userId) {
+  const secret = req.headers.get("x-internal-secret");
+  if (secret !== INTERNAL_SECRET) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

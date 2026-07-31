@@ -1,22 +1,24 @@
 import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
 import { db } from "@/db";
 import { emails } from "@/db/schema/emails";
 import { extractEntities } from "@/lib/ai/extraction";
 import { matchCustomer, upsertContacts } from "@/lib/customer-memory/customer-matcher";
 import { eq } from "drizzle-orm";
 
+const INTERNAL_SECRET = process.env.INTERNAL_API_SECRET || "area-one-internal";
+
 /**
  * POST /api/ai/extract-entities
  *
  * Trigger entity extraction for a specific email.
- * Called after an email is processed (from Gmail webhook, initial sync, etc.).
+ * Called internally after email sync. Uses x-internal-secret for auth.
  *
  * Body: { emailId: string }
  */
 export async function POST(req: Request) {
-  const { userId } = await auth();
-  if (!userId) {
+  // Internal auth check
+  const secret = req.headers.get("x-internal-secret");
+  if (secret !== INTERNAL_SECRET) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -108,7 +110,10 @@ async function triggerMemoryExtraction(emailId: string): Promise<void> {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
   await fetch(`${baseUrl}/api/ai/extract-memory`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "x-internal-secret": INTERNAL_SECRET,
+    },
     body: JSON.stringify({ emailId }),
   });
 }
@@ -120,7 +125,10 @@ async function triggerTimelineEvent(emailId: string): Promise<void> {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
   await fetch(`${baseUrl}/api/ai/generate-timeline`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "x-internal-secret": INTERNAL_SECRET,
+    },
     body: JSON.stringify({ emailId }),
   });
 }
