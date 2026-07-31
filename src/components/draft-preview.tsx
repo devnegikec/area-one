@@ -29,6 +29,8 @@ export function DraftPreview({ recommendationId, customerId, type = "follow_up",
   const [editSubject, setEditSubject] = React.useState("");
   const [editBody, setEditBody] = React.useState("");
   const [generated, setGenerated] = React.useState(false);
+  const [toAddress, setToAddress] = React.useState("");
+  const [sent, setSent] = React.useState(false);
 
   const generateDraft = async () => {
     setLoading(true);
@@ -67,6 +69,23 @@ export function DraftPreview({ recommendationId, customerId, type = "follow_up",
     setEditing(false);
   };
 
+  const handleSend = async () => {
+    if (!draft || !toAddress) return;
+    setSending(true);
+    try {
+      const res = await fetch("/api/drafts/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ draftId: draft.id, toAddress }),
+      });
+      if (res.ok) setSent(true);
+    } catch {
+      // silently fail
+    } finally {
+      setSending(false);
+    }
+  };
+
   const handleDiscard = () => {
     setDraft(null);
     setGenerated(false);
@@ -86,6 +105,18 @@ export function DraftPreview({ recommendationId, customerId, type = "follow_up",
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
             {loading ? "Generating..." : "Generate Draft"}
           </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (sent) {
+    return (
+      <Card>
+        <CardContent className="flex flex-col items-center justify-center py-8 text-center">
+          <Send className="h-8 w-8 text-emerald-500 mb-3" />
+          <p className="text-sm font-medium">Email sent!</p>
+          <p className="text-xs text-muted-foreground mt-1">Sent to {toAddress}</p>
         </CardContent>
       </Card>
     );
@@ -129,9 +160,19 @@ export function DraftPreview({ recommendationId, customerId, type = "follow_up",
               <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Body</p>
               <p className="text-sm text-muted-foreground whitespace-pre-wrap">{draft.body}</p>
             </div>
+            <div>
+              <label className="text-[10px] text-muted-foreground uppercase tracking-wider">To</label>
+              <Input
+                value={toAddress}
+                onChange={(e) => setToAddress(e.target.value)}
+                placeholder="recipient@company.com"
+                className="mt-1 text-sm"
+              />
+            </div>
             <div className="flex items-center gap-2 pt-2">
-              <Button size="sm" className="gap-1" disabled={sending}>
-                <Send className="h-3.5 w-3.5" /> Send
+              <Button size="sm" className="gap-1" onClick={handleSend} disabled={sending || !toAddress}>
+                {sending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+                {sending ? "Sending..." : "Send"}
               </Button>
               <Button size="sm" variant="outline" className="gap-1" onClick={() => { setEditing(true); }}>
                 <Edit3 className="h-3.5 w-3.5" /> Edit

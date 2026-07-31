@@ -1035,13 +1035,35 @@ LAUNCH CHECKLIST:
 
 ---
 
-## Phase 4: Execution — AI Takes Action
+## Phase 4: Execution — AI Takes Action 🚧 IN PROGRESS
 
 **Duration:** Sprints 13–16 (Weeks 25–32)
 **Goal:** User can approve AI recommendations and Area-One executes them.
 **Deploy:** Post-launch feature releases.
 
-### Sprint 13 (Week 25–26): Email Sending
+### Sprint 13 (Week 25–26): Email Sending ✅ DONE
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ BUILD: Email Sending via Gmail API ✅                            │
+├─────────────────────────────────────────────────────────────────┤
+│ ✅ Gmail sender: src/lib/integrations/gmail/sender.ts            │
+│    • MIME message construction + base64url encoding             │
+│    • Calls Gmail API /users/me/messages/send                    │
+│    • Token decryption from token-vault                          │
+│ ✅ Send API: POST /api/drafts/send                               │
+│    • Takes draftId + toAddress → sends via Gmail               │
+│    • Marks draft status as "sent"                               │
+│ ✅ DraftPreview wired: Generate → Edit → Recipient → Send        │
+│    • Human-in-the-loop: must enter recipient + click Send        │
+│    • Shows "Sent!" confirmation after success                   │
+│ ✅ Gmail send scope already in OAuth config                      │
+│                                                                  │
+│ Key Files:                                                       │
+│ • src/lib/integrations/gmail/sender.ts ← Email sender module     │
+│ • src/app/api/drafts/send/route.ts ← Send API endpoint           │
+│ • src/components/draft-preview.tsx ← Wired send button           │
+└─────────────────────────────────────────────────────────────────┘
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -1079,7 +1101,27 @@ LAUNCH CHECKLIST:
 ☐ E2E:    CANNOT send without user clicking "Send" (security gate)
 ```
 
-### Sprint 14 (Week 27–28): Meeting Scheduling + CRM Sync
+### Sprint 14 (Week 27–28): Weekly Digest + Deal Pipeline ✅ DONE
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ BUILD: Weekly Digest & Reporting ✅                              │
+├─────────────────────────────────────────────────────────────────┤
+│ ✅ Weekly digest: src/lib/reporting/weekly-digest.ts             │
+│    • DeepSeek V3 generates executive summary                    │
+│    • Stats: emails, new customers, deals progressed/stalled,     │
+│      pending actions, overdue follow-ups                        │
+│ ✅ Reports API: GET /api/reports/weekly                          │
+│ ✅ Reports page: /dashboard/reports                              │
+│    • AI-powered weekly summary card                             │
+│    • 6-stat grid (emails, customers, deals, pending, overdue)   │
+│    • Recent highlights from timeline                            │
+│                                                                  │
+│ Key Files:                                                       │
+│ • src/lib/reporting/weekly-digest.ts ← AI digest engine          │
+│ • src/app/api/reports/weekly/route.ts                            │
+│ • src/app/(dashboard)/dashboard/reports/page.tsx                 │
+└─────────────────────────────────────────────────────────────────┘
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
