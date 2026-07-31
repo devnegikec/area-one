@@ -8,6 +8,7 @@ import { DashboardLayout } from "@/components/dashboard-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ProposalPreview } from "@/components/proposal-preview";
 
 interface CustomerDetail {
   customer: {
@@ -313,6 +314,9 @@ export default function CustomerDetailPage() {
               )}
             </CardContent>
           </Card>
+
+          {/* Proposal Card */}
+          <ProposalPreview customerId={customer.id} customerName={customer.name} />
 
           {/* Emails Card */}
           <Card className="lg:col-span-2">

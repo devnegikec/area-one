@@ -1035,7 +1035,7 @@ LAUNCH CHECKLIST:
 
 ---
 
-## Phase 4: Execution — AI Takes Action 🚧 IN PROGRESS
+## Phase 4: Execution — AI Takes Action ✅ DONE
 
 **Duration:** Sprints 13–16 (Weeks 25–32)
 **Goal:** User can approve AI recommendations and Area-One executes them.
@@ -1164,7 +1164,27 @@ LAUNCH CHECKLIST:
 ☐ E2E: Salesforce connect → opportunities appear in Area-One
 ```
 
-### Sprint 15 (Week 29–30): Proposal Generation + Reporting
+### Sprint 15 (Week 29–30): Proposal Generation ✅ DONE
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ BUILD: Proposal Generator ✅                                     │
+├─────────────────────────────────────────────────────────────────┤
+│ ✅ Generator: src/lib/drafting/proposal-generator.ts             │
+│    • DeepSeek V3 writes full proposals from customer context     │
+│    • Sections: Executive Summary, Understanding Needs,           │
+│      Our Solution, Why Now, Implementation Plan, Pricing,        │
+│      Next Steps                                                  │
+│ ✅ API: POST /api/proposals (customerId → full proposal)         │
+│ ✅ ProposalPreview component: Generate → View → Export            │
+│    • Structured layout with pricing + next steps highlights      │
+│ ✅ Added to customer detail page                                 │
+│                                                                  │
+│ Key Files:                                                       │
+│ • src/lib/drafting/proposal-generator.ts ← AI proposal writer    │
+│ • src/app/api/proposals/route.ts                                 │
+│ • src/components/proposal-preview.tsx                            │
+└─────────────────────────────────────────────────────────────────┘
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
