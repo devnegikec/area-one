@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { handleGmailCallback } from "@/lib/integrations/gmail/service";
+import { handleSlackCallback } from "@/lib/integrations/slack/service";
 
 /**
  * Build the correct base URL using forwarded headers (for tunnels/proxies).
@@ -12,6 +12,7 @@ function getBaseUrl(req: Request): string {
   if (forwardedHost) {
     return `${forwardedProto}://${forwardedHost}`;
   }
+  // Fallback: use env var for tunnel scenarios where headers aren't forwarded
   if (process.env.NEXT_PUBLIC_APP_URL) {
     return process.env.NEXT_PUBLIC_APP_URL;
   }
@@ -26,20 +27,19 @@ export async function GET(req: Request) {
 
   const { searchParams } = new URL(req.url);
   const code = searchParams.get("code");
-  const state = searchParams.get("state"); // base64-encoded JSON with workspaceId
+  const state = searchParams.get("state");
 
   if (!code) {
     return NextResponse.json({ error: "Missing authorization code" }, { status: 400 });
   }
 
-  // Decode workspace context from the state parameter
   let workspaceId = "";
   if (state) {
     try {
       const decoded = JSON.parse(Buffer.from(state, "base64").toString("utf-8"));
       workspaceId = decoded.workspaceId || "";
     } catch {
-      // If state decoding fails, fall through
+      // fall through
     }
   }
 
@@ -48,18 +48,17 @@ export async function GET(req: Request) {
   }
 
   try {
-    const result = await handleGmailCallback(workspaceId, code);
-    // Redirect to dashboard with success
+    const result = await handleSlackCallback(workspaceId, code);
     const baseUrl = getBaseUrl(req);
     const redirectUrl = new URL("/dashboard", baseUrl);
-    redirectUrl.searchParams.set("gmail_connected", "true");
-    redirectUrl.searchParams.set("emails_synced", String(result.emailsSynced));
+    redirectUrl.searchParams.set("slack_connected", "true");
+    redirectUrl.searchParams.set("messages_synced", String(result.messagesSynced));
     return NextResponse.redirect(redirectUrl);
   } catch (error) {
-    console.error("Gmail callback error:", error);
+    console.error("Slack callback error:", error);
     const baseUrl = getBaseUrl(req);
     const redirectUrl = new URL("/dashboard/settings", baseUrl);
-    redirectUrl.searchParams.set("error", "gmail_connection_failed");
+    redirectUrl.searchParams.set("error", "slack_connection_failed");
     return NextResponse.redirect(redirectUrl);
   }
 }

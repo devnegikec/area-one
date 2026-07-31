@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { connectGmail } from "@/lib/integrations/gmail/service";
+import { connectSlack } from "@/lib/integrations/slack/service";
 import { db } from "@/db";
 import { workspaces, workspaceMembers } from "@/db/schema/workspaces";
 import { eq } from "drizzle-orm";
@@ -25,6 +25,7 @@ export async function GET(req: Request) {
     if (membership) {
       workspaceId = membership.workspaceId;
     } else {
+      // Create a default workspace if none exists
       const [ws] = await db
         .insert(workspaces)
         .values({
@@ -45,9 +46,9 @@ export async function GET(req: Request) {
   }
 
   try {
-    const authUrl = await connectGmail(workspaceId);
+    const authUrl = await connectSlack(workspaceId);
     return NextResponse.redirect(authUrl);
   } catch {
-    return NextResponse.json({ error: "Failed to initiate Gmail connection" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to initiate Slack connection" }, { status: 500 });
   }
 }
