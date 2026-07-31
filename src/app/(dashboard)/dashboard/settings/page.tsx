@@ -10,9 +10,10 @@ import { Badge } from "@/components/ui/badge";
 export default function SettingsPage() {
   const [connectingGmail, setConnectingGmail] = React.useState(false);
   const [connectingSlack, setConnectingSlack] = React.useState(false);
-  const [integrations, setIntegrations] = React.useState<{ gmail: boolean; slack: boolean }>({
+  const [integrations, setIntegrations] = React.useState<{ gmail: boolean; slack: boolean; calendar: boolean }>({
     gmail: false,
     slack: false,
+    calendar: false,
   });
   const [loading, setLoading] = React.useState(true);
 
@@ -123,11 +124,11 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            {/* Calendar placeholder */}
-            <div className="flex items-center justify-between rounded-lg border p-4 opacity-50">
+            {/* Calendar */}
+            <div className="flex items-center justify-between rounded-lg border p-4">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/20">
-                  <svg className="h-5 w-5 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <svg className="h-5 w-5 text-blue-600 dark:text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
                     <line x1="16" y1="2" x2="16" y2="6" />
                     <line x1="8" y1="2" x2="8" y2="6" />
@@ -136,10 +137,26 @@ export default function SettingsPage() {
                 </div>
                 <div>
                   <p className="font-medium">Google Calendar</p>
-                  <p className="text-sm text-muted-foreground">Coming soon — schedule meetings, sync events</p>
+                  <p className="text-sm text-muted-foreground">Schedule meetings, sync events</p>
                 </div>
               </div>
-              <Badge variant="secondary">Coming Soon</Badge>
+              <div className="flex items-center gap-2">
+                {loading ? (
+                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                ) : integrations.calendar ? (
+                  <Badge variant="success" className="gap-1">
+                    <Check className="h-3 w-3" /> Connected
+                  </Badge>
+                ) : (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled
+                  >
+                    Connect Calendar
+                  </Button>
+                )}
+              </div>
             </div>
           </CardContent>
         </Card>

@@ -19,10 +19,10 @@ export async function GET() {
     .limit(1);
 
   if (!membership) {
-    return NextResponse.json({ gmail: false, slack: false });
+    return NextResponse.json({ gmail: false, slack: false, calendar: false });
   }
 
-  // Fetch active integrations for Gmail and Slack
+  // Fetch active integrations for Gmail, Slack, and Calendar
   const activeIntegrations = await db
     .select({
       provider: integrations.provider,
@@ -32,7 +32,7 @@ export async function GET() {
     .where(
       and(
         eq(integrations.workspaceId, membership.workspaceId),
-        inArray(integrations.provider, ["gmail", "slack"]),
+        inArray(integrations.provider, ["gmail", "slack", "google_calendar"]),
         eq(integrations.status, "active")
       )
     );
@@ -40,6 +40,7 @@ export async function GET() {
   const connected = {
     gmail: activeIntegrations.some((i) => i.provider === "gmail"),
     slack: activeIntegrations.some((i) => i.provider === "slack"),
+    calendar: activeIntegrations.some((i) => i.provider === "google_calendar"),
   };
 
   return NextResponse.json(connected);
