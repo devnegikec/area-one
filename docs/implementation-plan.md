@@ -687,7 +687,7 @@
 
 ---
 
-## Phase 3: Recommendations — AI Suggests Actions (MVP Launch) 🚧 IN PROGRESS
+## Phase 3: Recommendations — AI Suggests Actions (MVP Launch) ✅ DONE
 
 **Duration:** Sprints 9–12 (Weeks 17–24)
 **Goal:** AI analyzes customer context and recommends next-best-actions. **PUBLIC LAUNCH.**
@@ -921,7 +921,28 @@
 ☐ E2E:    Regenerate draft → new version appears
 ```
 
-### Sprint 12 (Week 23–24): Calendar Integration + Public Launch
+### Sprint 12 (Week 23–24): Calendar Integration + Landing Page ✅ DONE
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ BUILD: Landing Page & Onboarding ✅                              │
+├─────────────────────────────────────────────────────────────────┤
+│ ✅ Landing page: app/(marketing)/page.tsx                        │
+│    • Hero with CTA, feature grid (6 features)                   │
+│    • How it works (3 steps), pricing CTA section                │
+│    • Navigation: Sign in / Get started                          │
+│ ✅ Onboarding wizard: src/components/onboarding-wizard.tsx      │
+│    • Step 1: Connect Gmail                                      │
+│    • Step 2: Connect Slack (optional)                           │
+│    • Step 3: Go to Dashboard                                    │
+│    • Progress indicator, skip option                            │
+│ ✅ Onboarding page: /onboarding                                  │
+│                                                                  │
+│ Key Files:                                                       │
+│ • src/app/(marketing)/page.tsx ← Public landing page             │
+│ • src/components/onboarding-wizard.tsx                           │
+│ • src/app/(dashboard)/onboarding/page.tsx                        │
+└─────────────────────────────────────────────────────────────────┘
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
