@@ -5,6 +5,7 @@ import { workspaceMembers } from "@/db/schema/workspaces";
 import { desc, eq } from "drizzle-orm";
 import { DashboardLayout } from "@/components/dashboard-layout";
 import { EmailCard } from "@/components/email-card";
+import { SyncButton } from "./sync-button";
 import { Mail } from "lucide-react";
 
 export default async function EmailsPage() {
@@ -32,9 +33,12 @@ export default async function EmailsPage() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Emails</h1>
-          <p className="text-muted-foreground mt-1">Browse and search your email conversations</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Emails</h1>
+            <p className="text-muted-foreground mt-1">Browse and search your email conversations</p>
+          </div>
+          <SyncButton />
         </div>
 
         {!userId ? (

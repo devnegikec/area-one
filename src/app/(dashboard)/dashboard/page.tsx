@@ -1,3 +1,7 @@
+import { auth } from "@clerk/nextjs/server";
+import { db } from "@/db";
+import { workspaceMembers } from "@/db/schema/workspaces";
+import { eq } from "drizzle-orm";
 import { DashboardLayout } from "@/components/dashboard-layout";
 import { DashboardHome } from "@/components/dashboard-home";
 
@@ -8,6 +12,18 @@ export default async function DashboardPage({
 }) {
   const params = await searchParams;
 
+  // Auto-resolve workspace for the logged-in user
+  const { userId } = await auth();
+  let workspaceId: string | undefined = params.workspace;
+  if (!workspaceId && userId) {
+    const [membership] = await db
+      .select({ workspaceId: workspaceMembers.workspaceId })
+      .from(workspaceMembers)
+      .where(eq(workspaceMembers.userId, userId))
+      .limit(1);
+    workspaceId = membership?.workspaceId;
+  }
+
   return (
     <DashboardLayout>
       {params.gmail_connected === "true" && (
@@ -15,7 +31,7 @@ export default async function DashboardPage({
           ✅ Gmail connected successfully! {params.emails_synced} emails synced.
         </div>
       )}
-      <DashboardHome workspaceId={params.workspace} />
+      <DashboardHome workspaceId={workspaceId} />
     </DashboardLayout>
   );
 }

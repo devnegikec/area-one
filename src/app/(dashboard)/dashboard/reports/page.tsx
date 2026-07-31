@@ -122,9 +122,3 @@ function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string
     </Card>
   );
 }
-  );
-}
-
-export default function ReportsPage() {
-  return <PlaceholderPage title="Reports" description="Analytics and insights for your revenue pipeline" />;
-}
