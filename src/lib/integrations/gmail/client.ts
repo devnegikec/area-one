@@ -18,6 +18,7 @@ export interface ParsedEmail {
 
 /**
  * Fetch the latest emails from Gmail (used for initial sync).
+ * Creates one OAuth2 client and reuses it for all calls so token refresh happens once.
  */
 export async function fetchRecentEmails(
   tokens: { accessToken: string; refreshToken: string | null; expiryDate: number | null },
@@ -36,7 +37,8 @@ export async function fetchRecentEmails(
 
   for (const msg of messages) {
     if (!msg.id) continue;
-    const email = await fetchEmailById(tokens, msg.id);
+    // Reuse same gmail client (and its tokens) for each fetch
+    const email = await fetchEmailByIdWithClient(gmail, tokens, msg.id);
     if (email) emails.push(email);
   }
 
@@ -50,9 +52,19 @@ export async function fetchEmailById(
   tokens: { accessToken: string; refreshToken: string | null; expiryDate: number | null },
   messageId: string
 ): Promise<ParsedEmail | null> {
-  try {
-    const gmail = getGmailClient(tokens);
+  const gmail = getGmailClient(tokens);
+  return fetchEmailByIdWithClient(gmail, tokens, messageId);
+}
 
+/**
+ * Internal: fetch a single email using an existing Gmail client.
+ */
+async function fetchEmailByIdWithClient(
+  gmail: ReturnType<typeof getGmailClient>,
+  tokens: { accessToken: string; refreshToken: string | null; expiryDate: number | null },
+  messageId: string
+): Promise<ParsedEmail | null> {
+  try {
     const response = await gmail.users.messages.get({
       userId: "me",
       id: messageId,

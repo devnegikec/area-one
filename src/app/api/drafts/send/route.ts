@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { drafts, emails, customers } from "@/db/schema";
 import { workspaceMembers } from "@/db/schema/workspaces";
 import { sendGmailEmail } from "@/lib/integrations/gmail/sender";
+import { logAudit } from "@/lib/security/audit-log";
 import { eq } from "drizzle-orm";
 
 /**
@@ -50,6 +51,15 @@ export async function POST(req: Request) {
       .update(drafts)
       .set({ status: "sent", updatedAt: new Date() })
       .where(eq(drafts.id, draftId));
+
+    // Audit log
+    logAudit({
+      workspaceId: draft.workspaceId,
+      userId: userId ?? "unknown",
+      action: "email.sent",
+      resource: `draft:${draftId}`,
+      details: { to: toAddress, subject: draft.subject },
+    }).catch(() => {});
 
     return NextResponse.json({ sent: true, messageId: result.messageId });
   } catch (error) {

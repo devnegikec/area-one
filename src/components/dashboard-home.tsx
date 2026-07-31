@@ -1,10 +1,11 @@
 "use client";
 
 import * as React from "react";
-import { Mail, Clock, TrendingUp, Users } from "lucide-react";
+import { Mail, Clock, TrendingUp, Users, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmailCard } from "@/components/email-card";
 import { RecommendationQueue } from "@/components/recommendation-queue";
+import { Button } from "@/components/ui/button";
 
 interface StatCardProps {
   title: string;
@@ -58,43 +59,73 @@ export function DashboardHome({ workspaceId }: DashboardHomeProps) {
     outbound: 0,
     withSentiment: 0,
   });
+  const [syncing, setSyncing] = React.useState(false);
 
   const loading = !!workspaceId && recentEmails.length === 0;
 
-  React.useEffect(() => {
-    if (!workspaceId) {
-      return;
-    }
-
-    async function fetchEmails() {
-      try {
-        const res = await fetch(`/api/emails?workspace_id=${workspaceId}&limit=10`);
-        if (res.ok) {
-          const emails = await res.json();
-          setRecentEmails(emails);
-
-          // Calculate stats
-          setStats({
-            totalEmails: emails.length,
-            inbound: emails.filter((e: { direction: string }) => e.direction === "inbound").length,
-            outbound: emails.filter((e: { direction: string }) => e.direction === "outbound").length,
-            withSentiment: emails.filter((e: { aiSentiment: string | null }) => e.aiSentiment).length,
-          });
-        }
-      } catch {
-        // silently fail
+  const fetchEmails = React.useCallback(async () => {
+    if (!workspaceId) return;
+    try {
+      const res = await fetch(`/api/emails?workspace_id=${workspaceId}&limit=10`);
+      if (res.ok) {
+        const emailList = await res.json();
+        setRecentEmails(emailList);
+        setStats({
+          totalEmails: emailList.length,
+          inbound: emailList.filter((e: { direction: string }) => e.direction === "inbound").length,
+          outbound: emailList.filter((e: { direction: string }) => e.direction === "outbound").length,
+          withSentiment: emailList.filter((e: { aiSentiment: string | null }) => e.aiSentiment).length,
+        });
       }
+    } catch {
+      // silently fail
     }
-
-    fetchEmails();
   }, [workspaceId]);
+
+  React.useEffect(() => {
+    fetchEmails();
+  }, [fetchEmails]);
+
+  const handleSync = async () => {
+    setSyncing(true);
+    try {
+      const res = await fetch("/api/integrations/gmail/sync");
+      if (res.ok) {
+        const data = await res.json();
+        if (data.synced > 0) {
+          fetchEmails();
+        }
+      }
+    } catch {
+      // silently fail
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  // Auto-sync every 5 minutes
+  React.useEffect(() => {
+    if (!workspaceId) return;
+    const interval = setInterval(handleSync, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [workspaceId, fetchEmails]);
 
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground mt-1">Your revenue execution overview</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+          <p className="text-muted-foreground mt-1">Your revenue execution overview</p>
+        </div>
+        <Button variant="outline" size="sm" onClick={handleSync} disabled={syncing} className="gap-2">
+          {syncing ? (
+            <RefreshCw className="h-4 w-4 animate-spin" />
+          ) : (
+            <RefreshCw className="h-4 w-4" />
+          )}
+          {syncing ? "Syncing..." : "Sync Gmail"}
+        </Button>
       </div>
 
       {/* AI Recommendations */}

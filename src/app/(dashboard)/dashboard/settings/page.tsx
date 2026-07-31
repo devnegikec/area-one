@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 export default function SettingsPage() {
   const [connectingGmail, setConnectingGmail] = React.useState(false);
   const [connectingSlack, setConnectingSlack] = React.useState(false);
+  const [connectingCalendar, setConnectingCalendar] = React.useState(false);
   const [integrations, setIntegrations] = React.useState<{ gmail: boolean; slack: boolean; calendar: boolean }>({
     gmail: false,
     slack: false,
@@ -43,6 +44,11 @@ export default function SettingsPage() {
   const handleConnectSlack = () => {
     setConnectingSlack(true);
     window.location.href = "/api/integrations/slack/connect";
+  };
+
+  const handleConnectCalendar = () => {
+    setConnectingCalendar(true);
+    window.location.href = "/api/integrations/calendar/connect";
   };
 
   return (
@@ -151,8 +157,10 @@ export default function SettingsPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    disabled
+                    onClick={handleConnectCalendar}
+                    disabled={connectingCalendar}
                   >
+                    {connectingCalendar && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Connect Calendar
                   </Button>
                 )}
