@@ -81,6 +81,11 @@ export async function POST(req: Request) {
       console.error(`Timeline event failed for email ${emailId}:`, err)
     );
 
+    // Step 7: Trigger recommendation refresh for this customer (fire-and-forget)
+    triggerRecommendations(customerId).catch((err) =>
+      console.error(`Recommendation refresh failed for customer ${customerId}:`, err)
+    );
+
     return NextResponse.json({
       customerId,
       company: entities.company.name || null,
@@ -117,5 +122,17 @@ async function triggerTimelineEvent(emailId: string): Promise<void> {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ emailId }),
+  });
+}
+
+/**
+ * Fire-and-forget recommendation refresh for a customer.
+ */
+async function triggerRecommendations(customerId: string): Promise<void> {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  await fetch(`${baseUrl}/api/recommendations`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ customerId }),
   });
 }

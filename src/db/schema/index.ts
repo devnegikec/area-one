@@ -6,3 +6,5 @@ export { customers } from "./customers";
 export { contacts } from "./contacts";
 export { customerMemoryEntries } from "./customer-memory";
 export { timelineEvents } from "./timeline-events";
+export { recommendations } from "./recommendations";
+export { drafts } from "./drafts";

@@ -4,6 +4,7 @@ import * as React from "react";
 import { Mail, Clock, TrendingUp, Users } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmailCard } from "@/components/email-card";
+import { RecommendationQueue } from "@/components/recommendation-queue";
 
 interface StatCardProps {
   title: string;
@@ -95,6 +96,9 @@ export function DashboardHome({ workspaceId }: DashboardHomeProps) {
         <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
         <p className="text-muted-foreground mt-1">Your revenue execution overview</p>
       </div>
+
+      {/* AI Recommendations */}
+      <RecommendationQueue />
 
       {/* Stats Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

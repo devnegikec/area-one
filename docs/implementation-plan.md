@@ -687,13 +687,13 @@
 
 ---
 
-## Phase 3: Recommendations — AI Suggests Actions (MVP Launch)
+## Phase 3: Recommendations — AI Suggests Actions (MVP Launch) 🚧 IN PROGRESS
 
 **Duration:** Sprints 9–12 (Weeks 17–24)
 **Goal:** AI analyzes customer context and recommends next-best-actions. **PUBLIC LAUNCH.**
 **Deploy:** Public beta → official launch.
 
-### Sprint 9 (Week 17–18): Coordinator Agent
+### Sprint 9 (Week 17–18): Coordinator Agent ✅ DONE (merged into Sprint 10)
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -739,7 +739,7 @@
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-**Test Checklist — Sprint 9**
+**Test Checklist — Sprint 9** ✅ (merged into Sprint 10)
 
 ```
 ☐ Unit: Coordinator agent routes to correct specialist node
@@ -750,7 +750,31 @@
 ☐ Integration: Agent respects workspace isolation
 ```
 
-### Sprint 10 (Week 19–20): Recommendation Engine + UI
+### Sprint 10 (Week 19–20): Recommendation Engine + UI ✅ DONE
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ BUILD: Recommendation Engine ✅                                  │
+├─────────────────────────────────────────────────────────────────┤
+│ ✅ Engine: src/lib/recommendations/engine.ts                     │
+│    • DeepSeek V3 analyzes customer context (emails, memory,      │
+│      timeline) → generates 1-3 recommendations                  │
+│    • 8 action types: send_email, schedule_meeting, share_pricing,│
+│      follow_up, escalate, mark_lost, ask_feedback, send_proposal│
+│    • Urgency levels: critical, high, medium, low                │
+│    • Confidence scoring (0-100) with reasoning text              │
+│ ✅ Table: recommendations + API (GET/POST/PATCH)                 │
+│ ✅ RecommendationQueue dashboard widget                          │
+│    • Priority queue with [Approve] [Reject] [Snooze]            │
+│    • Urgency badges + confidence bars                           │
+│ ✅ Auto-triggered after entity extraction                        │
+│                                                                  │
+│ Key Files:                                                       │
+│ • src/lib/recommendations/engine.ts ← AI recommendation engine   │
+│ • src/db/schema/recommendations.ts                               │
+│ • src/app/api/recommendations/route.ts                           │
+│ • src/components/recommendation-queue.tsx ← Dashboard widget     │
+└─────────────────────────────────────────────────────────────────┘
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -801,7 +825,7 @@
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-**Test Checklist — Sprint 10**
+**Test Checklist — Sprint 10** ✅
 
 ```
 ☐ Unit: Scoring engine produces higher scores for urgent items
@@ -818,7 +842,28 @@
 ☐ E2E:    Snooze recommendation → disappears + reappears after time
 ```
 
-### Sprint 11 (Week 21–22): Drafting Agent
+### Sprint 11 (Week 21–22): Drafting Agent ✅ DONE
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ BUILD: Drafting Agent ✅                                         │
+├─────────────────────────────────────────────────────────────────┤
+│ ✅ Draft generator: src/lib/drafting/generator.ts                │
+│    • DeepSeek V3 generates email drafts with customer context    │
+│    • 6 draft types: follow_up, pricing, meeting_request,         │
+│      proposal_cover, thank_you, check_in                        │
+│    • Personalized using customer memory facts + recent emails    │
+│ ✅ Drafts table: versioned (version, editDistance)               │
+│ ✅ API: POST /api/drafts (generate), PUT (edit)                  │
+│ ✅ DraftPreview component: Generate → Edit → Send → Regenerate   │
+│    • Inline editor, edit distance tracking                      │
+│                                                                  │
+│ Key Files:                                                       │
+│ • src/lib/drafting/generator.ts ← AI draft generation            │
+│ • src/db/schema/drafts.ts                                        │
+│ • src/app/api/drafts/route.ts                                    │
+│ • src/components/draft-preview.tsx ← Draft preview/edit UI       │
+└─────────────────────────────────────────────────────────────────┘
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
